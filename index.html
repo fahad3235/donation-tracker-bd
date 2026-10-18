@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donation Tracker BD</title>
+<meta name="description" content="Offline bilingual (English/Bangla) charitable donation tracker for Bangladesh.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1 data-i18n="title">Donation Tracker BD</h1>
+    <p class="tagline" data-i18n="tagline">Track every gift you give.</p>
+  </div>
+  <button id="langBtn" type="button" aria-label="Switch language">&#2476;&#2494;&#2434;&#2482;&#2494;</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab active" data-tab="dashboard" data-i18n="tabDashboard" role="tab" aria-selected="true">Dashboard</button>
+  <button class="tab" data-tab="donations" data-i18n="tabDonations" role="tab" aria-selected="false">Donations</button>
+  <button class="tab" data-tab="data" data-i18n="tabData" role="tab" aria-selected="false">Data</button>
+</nav>
+
+<main>
+  <!-- DASHBOARD -->
+  <section id="panel-dashboard" class="panel active">
+    <div class="stats">
+      <div class="stat"><span class="stat-label" data-i18n="statTotal">Total given (all time)</span><strong id="statTotal">-</strong></div>
+      <div class="stat"><span class="stat-label" data-i18n="statThisYear">This year</span><strong id="statThisYear">-</strong></div>
+      <div class="stat"><span class="stat-label" data-i18n="statThisMonth">This month</span><strong id="statThisMonth">-</strong></div>
+      <div class="stat"><span class="stat-label" data-i18n="statCount">Donations</span><strong id="statCount">-</strong></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h2 data-i18n="byCategory">By category</h2>
+        <div id="categoryBreakdown"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="topRecipient">Top recipient</h2>
+        <p id="topRecipient">-</p>
+        <h2 data-i18n="yearlyTitle">Yearly summary</h2>
+        <div id="yearlyTable"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="monthlyTitle">Last 12 months</h2>
+      <div id="monthlyChart"></div>
+    </div>
+  </section>
+
+  <!-- DONATIONS -->
+  <section id="panel-donations" class="panel">
+    <div class="card">
+      <h2 id="formTitle" data-i18n="addTitle">Add a donation</h2>
+      <form id="donationForm" novalidate>
+        <div class="form-grid">
+          <label><span data-i18n="date">Date</span>
+            <input id="fDate" type="date" required></label>
+          <label><span data-i18n="recipient">Recipient / organisation</span>
+            <input id="fRecipient" type="text" maxlength="100" required></label>
+          <label><span data-i18n="category">Category</span>
+            <select id="fCategory"></select></label>
+          <label><span data-i18n="amount">Amount (BDT)</span>
+            <input id="fAmount" type="text" inputmode="decimal" placeholder="1500" required>
+            <small data-i18n="amountHint">e.g. 1500 or 1,500.50</small></label>
+          <label><span data-i18n="method">Method</span>
+            <select id="fMethod"></select></label>
+          <label class="check"><input id="fReceipt" type="checkbox"><span data-i18n="receiptLabel">I got a receipt</span></label>
+        </div>
+        <label class="block"><span data-i18n="note">Note (optional)</span>
+          <input id="fNote" type="text" maxlength="200">
+          <small data-i18n="noteHint">Max 200 characters</small></label>
+        <div id="formErrors" class="errors" role="alert" aria-live="polite"></div>
+        <div class="form-actions">
+          <button type="submit" class="primary" data-i18n="saveBtn">Save donation</button>
+          <button type="button" id="cancelEditBtn" class="hidden" data-i18n="cancelEdit">Cancel edit</button>
+          <button type="button" id="clearFormBtn" data-i18n="clearForm">Clear form</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="listTitle">Donation list</h2>
+      <div class="filters">
+        <input id="fSearch" type="search" data-i18n-ph="search" placeholder="Search (recipient / note)">
+        <select id="fFilterCategory" aria-label="Filter by category"></select>
+        <select id="fFilterYear" aria-label="Filter by year"></select>
+        <select id="fSort" aria-label="Sort">
+          <option value="date-desc" data-i18n="sortDateDesc">Date: newest first</option>
+          <option value="date-asc" data-i18n="sortDateAsc">Date: oldest first</option>
+          <option value="amount-desc" data-i18n="sortAmountDesc">Amount: highest first</option>
+          <option value="amount-asc" data-i18n="sortAmountAsc">Amount: lowest first</option>
+        </select>
+      </div>
+      <p id="listCount"></p>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th data-i18n="colDate">Date</th><th data-i18n="colRecipient">Recipient</th>
+          <th data-i18n="colCategory">Category</th><th data-i18n="colAmount">Amount</th>
+          <th data-i18n="colMethod">Method</th><th data-i18n="colReceipt">Receipt</th>
+          <th data-i18n="colActions">Actions</th>
+        </tr></thead>
+        <tbody id="donationRows"></tbody>
+      </table></div>
+      <p id="emptyList" class="empty hidden" data-i18n="emptyList">No donations yet.</p>
+    </div>
+  </section>
+
+  <!-- DATA -->
+  <section id="panel-data" class="panel">
+    <div class="card">
+      <h2 data-i18n="dataTitle">Data &mdash; export / import / erase</h2>
+      <button id="exportBtn" type="button" class="primary" data-i18n="exportBtn">Download JSON</button>
+      <hr>
+      <label><span data-i18n="importLabel">Import from a JSON file</span>
+        <input id="importFile" type="file" accept=".json,application/json"></label>
+      <button id="importBtn" type="button" data-i18n="importBtn">Import</button>
+      <p class="help" data-i18n="importHelp">Only files exported from this app are accepted.</p>
+      <hr>
+      <h3 data-i18n="eraseTitle">Erase all data</h3>
+      <p class="help" data-i18n="eraseHelp">Type DELETE below to permanently erase every donation.</p>
+      <input id="eraseInput" type="text" data-i18n-ph="erasePlaceholder" placeholder="Type DELETE" autocomplete="off">
+      <button id="eraseBtn" type="button" class="danger" data-i18n="eraseBtn">Erase all</button>
+      <div id="dataMsg" class="errors" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+</main>
+
+<footer><p data-i18n="footerDisclaimer">A personal record-keeping tool.</p></footer>
+
+<script src="js/logic.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
